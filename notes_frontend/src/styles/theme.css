@@ -1,0 +1,136 @@
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #F59E0B;
+  --color-success: #F59E0B;
+  --color-error: #EF4444;
+  --gradient-from: rgba(59, 130, 246, 0.1);
+  --gradient-to: #f9fafb;
+  --background: #f9fafb;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 10px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 30px rgba(0,0,0,0.12);
+  --ring: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--text);
+  background: linear-gradient(180deg, var(--gradient-from), var(--gradient-to));
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--color-primary);
+  color: white;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
+}
+.btn:hover {
+  filter: brightness(1.03);
+  box-shadow: var(--shadow-md);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn.secondary {
+  background: var(--color-secondary);
+  color: #1f2937;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid #e5e7eb;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.input:focus,
+.textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--ring);
+}
+
+.textarea {
+  min-height: 200px;
+  resize: vertical;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.list-reset {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 6px;
+}
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
+.flex {
+  display: flex;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.space-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

@@ -1,0 +1,162 @@
+---
+import type { Note } from "../lib/store";
+const { notes = [], selectedId = null } = Astro.props as {
+  notes: Note[];
+  selectedId: string | null;
+};
+---
+<aside class="sidebar card" aria-label="Notes list">
+  <header class="sidebar-header">
+    <h2 class="title">My Notes</h2>
+    <button class="btn" id="add-note" aria-label="Create new note">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      New
+    </button>
+  </header>
+
+  <ul class="list-reset notes">
+    {notes.map((n) => (
+      <li class={`note-item ${selectedId === n.id ? 'active' : ''}`} data-id={n.id} tabindex="0" role="button" aria-pressed={selectedId === n.id ? 'true' : 'false'}>
+        <div class="note-title">{n.title ? n.title : 'Untitled'}</div>
+        <div class="note-meta">{new Date(n.updatedAt).toLocaleString()}</div>
+      </li>
+    ))}
+    {notes.length === 0 && (
+      <li class="empty">No notes yet. Click “New”.</li>
+    )}
+  </ul>
+</aside>
+
+<style>
+  .sidebar {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    min-width: 260px;
+    max-width: 320px;
+    gap: 12px;
+  }
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .title {
+    margin: 0;
+    font-size: 16px;
+  }
+  .notes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+  }
+  .note-item {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    background: var(--surface);
+    border-radius: calc(var(--radius) - 4px);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .06s ease;
+    outline: none;
+  }
+  .note-item:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .note-item:active {
+    transform: translateY(1px);
+  }
+  .note-item.active {
+    border-color: var(--color-primary);
+    box-shadow: var(--ring);
+  }
+  .note-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .note-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .empty {
+    color: var(--muted);
+    text-align: center;
+    padding: 12px 8px;
+  }
+
+  @media (max-width: 860px) {
+    .sidebar {
+      max-width: unset;
+      min-width: unset;
+      height: auto;
+    }
+  }
+</style>
+
+<script client:load>
+  import { createNote, selectNote, subscribe, getNotes, getSelected } from "../lib/store";
+
+  const addBtn = document.getElementById("add-note") as HTMLButtonElement | null;
+
+  function bindNoteClicks() {
+    document.querySelectorAll<HTMLLIElement>(".note-item").forEach((el) => {
+      const id = el.dataset.id!;
+      const handler = () => selectNote(id);
+      el.addEventListener("click", handler);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handler();
+        }
+      });
+    });
+  }
+
+  function renderActiveState() {
+    const selected = getSelected();
+    document.querySelectorAll<HTMLLIElement>(".note-item").forEach((el) => {
+      el.classList.toggle("active", el.dataset.id === selected?.id);
+      el.setAttribute("aria-pressed", el.classList.contains("active") ? "true" : "false");
+    });
+  }
+
+  const unsub = subscribe(() => {
+    // Soft update: re-create list if count changed, otherwise toggle active
+    const list = document.querySelector(".notes")!;
+    const currentIds = Array.from(list.querySelectorAll<HTMLLIElement>(".note-item")).map((li) => li.dataset.id);
+    const storeIds = getNotes().map((n) => n.id);
+    const changed = currentIds.length !== storeIds.length || currentIds.some((id, i) => id !== storeIds[i]);
+
+    if (changed) {
+      const notes = getNotes();
+      list.innerHTML = notes.map((n) => `
+        <li class="note-item ${getSelected()?.id === n.id ? 'active' : ''}" data-id="${n.id}" tabindex="0" role="button" aria-pressed="${getSelected()?.id === n.id ? 'true' : 'false'}">
+          <div class="note-title">${n.title ? n.title : 'Untitled'}</div>
+          <div class="note-meta">${new Date(n.updatedAt).toLocaleString()}</div>
+        </li>
+      `).join("") || '<li class="empty">No notes yet. Click “New”.</li>';
+      bindNoteClicks();
+    } else {
+      renderActiveState();
+    }
+  });
+
+  bindNoteClicks();
+  renderActiveState();
+
+  addBtn?.addEventListener("click", () => {
+    createNote();
+  });
+
+  window.addEventListener("unload", () => unsub());
+</script>

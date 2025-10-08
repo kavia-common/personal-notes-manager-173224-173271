@@ -10,6 +10,11 @@ export default [
   ...tseslint.configs.recommended,
 
   {
+    // Ignore Astro-generated types to avoid linting auto-generated files
+    ignores: ['.astro/**', 'dist/**'],
+  },
+
+  {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tseslint.parser,

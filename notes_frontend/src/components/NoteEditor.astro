@@ -1,0 +1,112 @@
+---
+import type { Note } from "../lib/store";
+const { note = null } = Astro.props as { note: Note | null };
+---
+<section class="editor card" aria-label="Note editor">
+  {note ? (
+    <form id="editor-form" class="editor-inner" novalidate>
+      <div class="row space-between">
+        <label class="sr-only" for="note-title">Title</label>
+        <input id="note-title" class="input title" name="title" placeholder="Title" value={note.title} />
+        <div class="row" style="gap:10px">
+          <button id="save-btn" type="button" class="btn" aria-label="Save note">Save</button>
+          <button id="delete-btn" type="button" class="btn ghost" aria-label="Delete note">Delete</button>
+        </div>
+      </div>
+      <label class="sr-only" for="note-content">Content</label>
+      <textarea id="note-content" class="textarea" name="content" placeholder="Write your note...">{note.content}</textarea>
+      <div class="meta">Last updated: <span id="updatedAt">{new Date(note.updatedAt).toLocaleString()}</span></div>
+    </form>
+  ) : (
+    <div class="placeholder">Select or create a note to start editing.</div>
+  )}
+</section>
+
+<style>
+  .editor {
+    height: 100%;
+    padding: 16px;
+    display: flex;
+  }
+  .editor-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+  .title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .placeholder {
+    margin: auto;
+    text-align: center;
+    color: var(--muted);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+  }
+</style>
+
+<script client:load>
+  import { getSelected, updateNote, deleteNote, subscribe, selectNote } from "../lib/store";
+
+  const form = document.getElementById("editor-form") as HTMLFormElement | null;
+  const titleInput = document.getElementById("note-title") as HTMLInputElement | null;
+  const contentInput = document.getElementById("note-content") as HTMLTextAreaElement | null;
+  const saveBtn = document.getElementById("save-btn") as HTMLButtonElement | null;
+  const deleteBtn = document.getElementById("delete-btn") as HTMLButtonElement | null;
+  const updatedAtEl = document.getElementById("updatedAt") as HTMLSpanElement | null;
+
+  function refreshFromStore() {
+    const n = getSelected();
+    if (!n || !titleInput || !contentInput || !updatedAtEl) return;
+    if (document.activeElement !== titleInput) titleInput.value = n.title;
+    if (document.activeElement !== contentInput) contentInput.value = n.content;
+    updatedAtEl.textContent = new Date(n.updatedAt).toLocaleString();
+  }
+
+  const unsub = subscribe(() => {
+    refreshFromStore();
+  });
+
+  saveBtn?.addEventListener("click", () => {
+    const n = getSelected();
+    if (!n) return;
+    const title = titleInput?.value ?? "";
+    const content = contentInput?.value ?? "";
+    updateNote(n.id, { title, content });
+  });
+
+  // Auto-save on blur
+  titleInput?.addEventListener("blur", () => {
+    const n = getSelected();
+    if (!n) return;
+    updateNote(n.id, { title: titleInput.value });
+  });
+  contentInput?.addEventListener("blur", () => {
+    const n = getSelected();
+    if (!n) return;
+    updateNote(n.id, { content: contentInput.value });
+  });
+
+  deleteBtn?.addEventListener("click", () => {
+    const n = getSelected();
+    if (!n) return;
+    const ok = confirm("Delete this note?");
+    if (!ok) return;
+    deleteNote(n.id);
+    // Select none after delete
+    selectNote(null);
+  });
+
+  window.addEventListener("unload", () => unsub());
+</script>

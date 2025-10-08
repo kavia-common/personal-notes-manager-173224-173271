@@ -1,11 +1,55 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+import NoteEditor from '../components/NoteEditor.astro';
+import '../styles/theme.css';
+import { getNotes, getSelected } from '../lib/store';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const notes = getNotes();
+const selected = getSelected();
 ---
 
 <Layout>
-	<Welcome />
+  <main class="app">
+    <Sidebar notes={notes} selectedId={selected ? selected.id : null} />
+    <section class="content">
+      {selected ? <NoteEditor note={selected} /> : <div class="card empty-placeholder">
+        <h2>Notes</h2>
+        <p>Select a note from the sidebar or create a new one to get started.</p>
+      </div>}
+    </section>
+  </main>
+
+  <script>
+    // Initialize default note only on client
+    import("../lib/store").then(({ initializeIfEmpty }) => {
+      try { initializeIfEmpty(); } catch {}
+    });
+  </script>
 </Layout>
+
+<style>
+  .app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+  .content {
+    min-height: calc(100vh - 32px);
+  }
+  .empty-placeholder {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 860px) {
+    .app {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
